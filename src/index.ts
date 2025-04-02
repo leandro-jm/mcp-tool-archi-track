@@ -24,7 +24,7 @@ async function makeRequest<T>(url: string): Promise<T | null> {
   const headers = {
     "User-Agent": USER_AGENT || "Archi track MCP Server",
     Accept: "application/json",
-    Authorization: TOKEN  || "",
+    Authorization: `Bearer ${TOKEN}`  || "",
   };
 
   try {
