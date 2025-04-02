@@ -47,8 +47,6 @@ server.tool(
   },
   async ({ application }) => {
 
-    console.log(`Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`);
-
     const applicationUrl = `${API_BASE}/api/application:get?filter=%7B%22name%22%3A%20%22${application}%22%7D`;
     const applicationData = await makeRequest<ApplicationResponse>(
       applicationUrl
@@ -85,6 +83,7 @@ async function main() {
 }
 
 main().catch((error) => {
+  console.log(`Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`);
   console.error("Fatal error in main():", error);
   process.exit(1);
 });
