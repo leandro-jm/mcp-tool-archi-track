@@ -1,15 +1,17 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import dotenv from "dotenv";
 
-const NWS_API_BASE = "http://archi-track.lmlabs.com.br";
-const USER_AGENT = "archi-track-app/1.0";
-const TOKEN =
-  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjEsInJvbGVOYW1lIjoibWVtYmVyIiwiaWF0IjoxNzQyNTE5NDM1LCJleHAiOjE3NDUxMTE0MzV9.8EI70DvVAV3EVjslx2UQENGEtfDbs6_ezbCI6cCNpqc";
+dotenv.config();
+
+const API_BASE = process.env.API_BASE;
+const USER_AGENT = process.env.USER_AGENT;
+const TOKEN = process.env.TOKEN;
 
 const server = new McpServer({
-  name: "archi-track",
-  version: "1.0.0",
+  name: process.env.SERVER_NAME || "Archi track MCP Server",
+  version: process.env.SERVER_VERSION || "1.0.0",
 });
 
 type ApplicationResponse = {
@@ -20,9 +22,9 @@ type ApplicationResponse = {
 
 async function makeRequest<T>(url: string): Promise<T | null> {
   const headers = {
-    "User-Agent": USER_AGENT,
+    "User-Agent": USER_AGENT || "Archi track MCP Server",
     Accept: "application/json",
-    Authorization: TOKEN,
+    Authorization: TOKEN  || "",
   };
 
   try {
@@ -44,7 +46,7 @@ server.tool(
     application: z.string().trim(),
   },
   async ({ application }) => {
-    const applicationUrl = `${NWS_API_BASE}/api/application:get?filter=%7B%22name%22%3A%20%22${application}%22%7D`;
+    const applicationUrl = `${API_BASE}/api/application:get?filter=%7B%22name%22%3A%20%22${application}%22%7D`;
     const applicationData = await makeRequest<ApplicationResponse>(
       applicationUrl
     );
