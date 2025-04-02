@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import dotenv from "dotenv";
 dotenv.config();
+/// <reference types="node" />
 const API_BASE = process.env.API_BASE;
 const USER_AGENT = process.env.USER_AGENT;
 const TOKEN = process.env.TOKEN;
