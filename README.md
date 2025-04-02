@@ -15,7 +15,7 @@ O projeto usa variáveis de ambiente para configuração. Crie um arquivo **`.en
 ```ini
 NWS_API_BASE=http://archi-track.lmlabs.com.br
 USER_AGENT=archi-track-app/1.0
-TOKEN=Bearer SEU_TOKEN_AQUI
+TOKEN=SEU_TOKEN_AQUI
 SERVER_NAME=archi-track
 SERVER_VERSION=1.0.0
 ```
