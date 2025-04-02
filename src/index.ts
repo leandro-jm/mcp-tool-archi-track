@@ -34,6 +34,7 @@ async function makeRequest<T>(url: string): Promise<T | null> {
     }
     return (await response.json()) as T;
   } catch (error) {
+    console.error(`Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`);
     console.error("Error making request:", error);
     return null;
   }
@@ -83,7 +84,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.log(`Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`);
   console.error("Fatal error in main():", error);
   process.exit(1);
 });
