@@ -21,7 +21,7 @@ async function makeRequest(url) {
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return await response.json();
+        return (await response.json());
     }
     catch (error) {
         console.error("Error making request:", error);
@@ -59,6 +59,7 @@ async function main() {
     console.error("Archi track MCP Server running on stdio");
 }
 main().catch((error) => {
+    console.log(`Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`);
     console.error("Fatal error in main():", error);
     process.exit(1);
 });

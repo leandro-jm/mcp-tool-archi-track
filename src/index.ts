@@ -32,7 +32,7 @@ async function makeRequest<T>(url: string): Promise<T | null> {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return await response.json();
+    return (await response.json()) as T;
   } catch (error) {
     console.error("Error making request:", error);
     return null;
