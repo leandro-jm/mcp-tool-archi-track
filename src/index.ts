@@ -46,6 +46,9 @@ server.tool(
     application: z.string().trim(),
   },
   async ({ application }) => {
+
+    console.log(`Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`);
+
     const applicationUrl = `${API_BASE}/api/application:get?filter=%7B%22name%22%3A%20%22${application}%22%7D`;
     const applicationData = await makeRequest<ApplicationResponse>(
       applicationUrl
