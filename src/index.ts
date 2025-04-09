@@ -20,6 +20,13 @@ type ApplicationResponse = {
   };
 };
 
+/**
+ * 
+ * @param url 
+ * @param method 
+ * @param body 
+ * @returns 
+ */
 async function makeRequest<T>(
   url: string,
   method: string,
