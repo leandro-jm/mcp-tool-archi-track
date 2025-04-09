@@ -20,21 +20,37 @@ type ApplicationResponse = {
   };
 };
 
-async function makeRequest<T>(url: string): Promise<T | null> {
+async function makeRequest<T>(
+  url: string,
+  method: string,
+  body?: any
+): Promise<T | null> {
   const headers = {
     "User-Agent": USER_AGENT || "Archi track MCP Server",
     Accept: "application/json",
-    Authorization: `Bearer ${TOKEN}`  || "",
+    Authorization: `Bearer ${TOKEN}` || "",
+    "Content-Type": "application/json",
   };
 
+  const options: RequestInit = {
+    method: method,
+    headers: headers,
+  };
+
+  if (body && ["POST", "PUT", "PATCH"].includes(method.toUpperCase())) {
+    options.body = JSON.stringify(body);
+  }
+
   try {
-    const response = await fetch(url, { headers });
+    const response = await fetch(url, options);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return (await response.json()) as T;
   } catch (error) {
-    console.error(`Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`);
+    console.error(
+      `Received parameters: URL: ${API_BASE} -  AGENT: ${USER_AGENT} - TOKEN: ${TOKEN}`
+    );
     console.error("Error making request:", error);
     return null;
   }
@@ -47,10 +63,10 @@ server.tool(
     application: z.string().trim(),
   },
   async ({ application }) => {
-
     const applicationUrl = `${API_BASE}/api/application:get?filter=%7B%22name%22%3A%20%22${application}%22%7D`;
     const applicationData = await makeRequest<ApplicationResponse>(
-      applicationUrl
+      applicationUrl,
+      "GET"
     );
 
     if (!applicationData) {
@@ -71,6 +87,52 @@ server.tool(
         {
           type: "text",
           text: applicationText,
+        },
+      ],
+    };
+  }
+);
+
+server.tool(
+  "post-new-ticket",
+  "Post new ticket in application.",
+  {
+    title: z.string().trim(),
+    description: z.string().trim(),
+  },
+  async ({ title, description }) => {
+    const body = {
+      title: title,
+      description: description,
+      status: "Aberto",
+      priority: "Normal",
+    };
+
+    const ticketUrl = `${API_BASE}/api/ticket:create`;
+    const ticketData = await makeRequest<ApplicationResponse>(
+      ticketUrl,
+      "POST",
+      body
+    );
+
+    if (!ticketData) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Failed to open the ticket",
+          },
+        ],
+      };
+    }
+
+    const responseText = `O ticket foi aberto com sucesso. Segue o numero XXX`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: responseText,
         },
       ],
     };
