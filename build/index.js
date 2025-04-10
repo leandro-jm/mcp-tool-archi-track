@@ -10,19 +10,25 @@ const server = new McpServer({
     name: process.env.SERVER_NAME || "Archi track MCP Server",
     version: process.env.SERVER_VERSION || "1.0.0",
 });
+/**
+ *
+ * @param url
+ * @param method
+ * @param body
+ * @returns
+ */
 async function makeRequest(url, method, body) {
     const headers = {
         "User-Agent": USER_AGENT || "Archi track MCP Server",
-        "Accept": "application/json",
-        "Authorization": `Bearer ${TOKEN}` || "",
-        "Content-Type": "application/json"
+        Accept: "application/json",
+        Authorization: `Bearer ${TOKEN}` || "",
+        "Content-Type": "application/json",
     };
     const options = {
         method: method,
         headers: headers,
     };
-    // Add body for POST, PUT, PATCH requests
-    if (body && ['POST', 'PUT', 'PATCH'].includes(method.toUpperCase())) {
+    if (body && ["POST", "PUT", "PATCH"].includes(method.toUpperCase())) {
         options.body = JSON.stringify(body);
     }
     try {
@@ -38,27 +44,65 @@ async function makeRequest(url, method, body) {
         return null;
     }
 }
-server.tool("get-info-application", "Get information about application.", {
+/*
+server.tool(
+  "get-info-application",
+  "Get information about application.",
+  {
     application: z.string().trim(),
-}, async ({ application }) => {
+  },
+  async ({ application }) => {
     const applicationUrl = `${API_BASE}/api/application:get?filter=%7B%22name%22%3A%20%22${application}%22%7D`;
-    const applicationData = await makeRequest(applicationUrl, 'GET');
+    const applicationData = await makeRequest<ApplicationResponse>(
+      applicationUrl,
+      "GET"
+    );
+
     if (!applicationData) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Failed to retrieve application data",
+          },
+        ],
+      };
+    }
+
+    const applicationText = `A aplicação ${application} é ${applicationData.data?.description_full}.`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: applicationText,
+        },
+      ],
+    };
+  }
+);
+*/
+server.tool("get-info-ticket", "Get information about ticket using protocol number.", {
+    protocol: z.string().trim(),
+}, async ({ protocol }) => {
+    const ticketUrl = `${API_BASE}/api/ticket:get?filter=%7B%22protocol%22%3A%20%22${protocol}%22%7D`;
+    const ticketData = await makeRequest(ticketUrl, "GET");
+    if (!ticketData) {
         return {
             content: [
                 {
                     type: "text",
-                    text: "Failed to retrieve application data",
+                    text: "Não foi encontrado ticket para o protocolo informado!",
                 },
             ],
         };
     }
-    const applicationText = `A aplicação ${application} é ${applicationData.data?.description_full}.`;
+    const ticketText = `Os dados do ticket são: - Titulo: ${ticketData.data?.title} - Descrição: ${ticketData.data?.description} - Status: ${ticketData.data?.status} - Prioridade: ${ticketData.data?.priority}.`;
     return {
         content: [
             {
                 type: "text",
-                text: applicationText,
+                text: ticketText,
             },
         ],
     };
@@ -68,13 +112,13 @@ server.tool("post-new-ticket", "Post new ticket in application.", {
     description: z.string().trim(),
 }, async ({ title, description }) => {
     const body = {
-        "title": title,
-        "description": description,
-        "status": "Aberto",
-        "priority": "Normal"
+        title: title,
+        description: description,
+        status: "Aberto",
+        priority: "Normal",
     };
     const ticketUrl = `${API_BASE}/api/ticket:create`;
-    const ticketData = await makeRequest(ticketUrl, 'POST');
+    const ticketData = await makeRequest(ticketUrl, "POST", body);
     if (!ticketData) {
         return {
             content: [
@@ -85,7 +129,7 @@ server.tool("post-new-ticket", "Post new ticket in application.", {
             ],
         };
     }
-    const responseText = `O ticket foi aberto com sucesso. Segue o numero XXX`;
+    const responseText = `O ticket foi aberto com sucesso. Segue o numero do protocolo:  ${ticketData.data?.protocol}`;
     return {
         content: [
             {

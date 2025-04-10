@@ -14,9 +14,18 @@ const server = new McpServer({
   version: process.env.SERVER_VERSION || "1.0.0",
 });
 
-type ApplicationResponse = {
+type TicketProtocolResponse = {
   data?: {
-    description_full?: string;
+    protocol?: string;
+  };
+};
+
+type TicketResponse = {
+  data?: {
+    title?: string;
+    description?: string;
+    status?: string;
+    priority?: string;
   };
 };
 
@@ -63,6 +72,7 @@ async function makeRequest<T>(
   }
 }
 
+/*
 server.tool(
   "get-info-application",
   "Get information about application.",
@@ -99,6 +109,44 @@ server.tool(
     };
   }
 );
+*/
+
+server.tool(
+  "get-info-ticket",
+  "Get information about ticket using protocol number.",
+  {
+    protocol: z.string().trim(),
+  },
+  async ({ protocol }) => {
+    const ticketUrl = `${API_BASE}/api/ticket:get?filter=%7B%22protocol%22%3A%20%22${protocol}%22%7D`;
+    const ticketData = await makeRequest<TicketResponse>(
+      ticketUrl,
+      "GET"
+    );
+
+    if (!ticketData) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Não foi encontrado ticket para o protocolo informado!",
+          },
+        ],
+      };
+    }
+
+    const ticketText = `Os dados do ticket são: - Titulo: ${ticketData.data?.title} - Descrição: ${ticketData.data?.description} - Status: ${ticketData.data?.status} - Prioridade: ${ticketData.data?.priority}.`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: ticketText,
+        },
+      ],
+    };
+  }
+);
 
 server.tool(
   "post-new-ticket",
@@ -116,7 +164,7 @@ server.tool(
     };
 
     const ticketUrl = `${API_BASE}/api/ticket:create`;
-    const ticketData = await makeRequest<ApplicationResponse>(
+    const ticketData = await makeRequest<TicketProtocolResponse>(
       ticketUrl,
       "POST",
       body
@@ -133,7 +181,7 @@ server.tool(
       };
     }
 
-    const responseText = `O ticket foi aberto com sucesso. Segue o numero XXX`;
+    const responseText = `O ticket foi aberto com sucesso. Segue o numero do protocolo:  ${ticketData.data?.protocol}`;
 
     return {
       content: [
