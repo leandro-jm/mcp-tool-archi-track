@@ -20,12 +20,15 @@ type TicketProtocolResponse = {
   };
 };
 
-type TicketResponse = {
+type PaymentResponse = {
   data?: {
-    title?: string;
-    description?: string;
-    status?: string;
-    priority?: string;
+    document_id?: string;
+    code_bar?: string;
+    code_pix?: string;
+    product?: string;
+    pay_date?: string;
+    value_invoice?: string;
+    phone?: string;
   };
 };
 
@@ -72,122 +75,49 @@ async function makeRequest<T>(
   }
 }
 
-/*
 server.tool(
-  "get-info-application",
-  "Get information about application.",
+  "solicita-codigo-pix",
+  "Solicitar o codigo do PIX para pagamento da fatura. Informações que o usuário deve enviar: CPF ou CNPJ e Numero do telefone",
   {
-    application: z.string().trim(),
+    document_id: z.string().trim(),
+    phone: z.string().trim()
   },
-  async ({ application }) => {
-    const applicationUrl = `${API_BASE}/api/application:get?filter=%7B%22name%22%3A%20%22${application}%22%7D`;
-    const applicationData = await makeRequest<ApplicationResponse>(
-      applicationUrl,
+  async ({ document_id, phone }) => {
+    const paymentUrl = `${API_BASE}/api/payment:get?filter=%7B%22document_id%22%3A%22${document_id}%22%2C%20%22phone%22%3A%22${phone}%22%7D`;
+    const paymentData = await makeRequest<PaymentResponse>(
+      paymentUrl,
       "GET"
     );
 
-    if (!applicationData) {
+    if (!document_id || !phone) {
       return {
         content: [
           {
             type: "text",
-            text: "Failed to retrieve application data",
+            text: "Precisamos do CPF ou CNPJ e o telefone para gerar o código do PIX.",
           },
         ],
       };
     }
 
-    const applicationText = `A aplicação ${application} é ${applicationData.data?.description_full}.`;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: applicationText,
-        },
-      ],
-    };
-  }
-);
-*/
-
-server.tool(
-  "get-info-ticket",
-  "Get information about ticket using protocol number.",
-  {
-    protocol: z.string().trim(),
-  },
-  async ({ protocol }) => {
-    const ticketUrl = `${API_BASE}/api/ticket:get?filter=%7B%22protocol%22%3A%20%22${protocol}%22%7D`;
-    const ticketData = await makeRequest<TicketResponse>(
-      ticketUrl,
-      "GET"
-    );
-
-    if (!ticketData) {
+    if (!paymentData) {
       return {
         content: [
           {
             type: "text",
-            text: "Não foi encontrado ticket para o protocolo informado!",
+            text: "Não conseguimos encontrar o pagamento com os dados informados.",
           },
         ],
       };
     }
 
-    const ticketText = `Os dados do ticket são: - Titulo: ${ticketData.data?.title} - Descrição: ${ticketData.data?.description} - Status: ${ticketData.data?.status} - Prioridade: ${ticketData.data?.priority}.`;
+    const paymentText = `Os dados do pagamento são: Código de barras: ${paymentData.data?.code_bar} - Código do PIX: ${paymentData.data?.code_pix} - Produto: ${paymentData.data?.product} - Data de vencimento: ${paymentData.data?.pay_date} - Valor da fatura: ${paymentData.data?.value_invoice} - Telefone: ${paymentData.data?.phone}`;
 
     return {
       content: [
         {
           type: "text",
-          text: ticketText,
-        },
-      ],
-    };
-  }
-);
-
-server.tool(
-  "post-new-ticket",
-  "Post new ticket in application.",
-  {
-    title: z.string().trim(),
-    description: z.string().trim(),
-  },
-  async ({ title, description }) => {
-    const body = {
-      title: title,
-      description: description,
-      status: "Aberto",
-      priority: "Normal",
-    };
-
-    const ticketUrl = `${API_BASE}/api/ticket:create`;
-    const ticketData = await makeRequest<TicketProtocolResponse>(
-      ticketUrl,
-      "POST",
-      body
-    );
-
-    if (!ticketData) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: "Failed to open the ticket",
-          },
-        ],
-      };
-    }
-
-    const responseText = `O ticket foi aberto com sucesso. Segue o numero do protocolo:  ${ticketData.data?.protocol}`;
-
-    return {
-      content: [
-        {
-          type: "text",
-          text: responseText,
+          text: paymentText,
         },
       ],
     };
