@@ -20,6 +20,15 @@ type TicketProtocolResponse = {
   };
 };
 
+type TicketResponse = {
+  data?: {
+    title?: string;
+    description?: string;
+    status?: string;
+    priority?: string;
+  };
+};
+
 type PaymentResponse = {
   data?: {
     document_id?: string;
@@ -77,24 +86,23 @@ async function makeRequest<T>(
 
 server.tool(
   "solicita-codigo-pix",
-  "Solicitar o codigo do PIX para pagamento da fatura. Informações que o usuário deve enviar: CPF ou CNPJ e Numero do telefone",
+  "Solicitar o codigo do PIX para pagamento da fatura. Informações que o usuário deve enviar: CPF",
   {
-    document_id: z.string().trim(),
-    phone: z.string().trim()
+    document_id: z.string().trim()
   },
-  async ({ document_id, phone }) => {
-    const paymentUrl = `${API_BASE}/api/payment:get?filter=%7B%22document_id%22%3A%22${document_id}%22%2C%20%22phone%22%3A%22${phone}%22%7D`;
+  async ({ document_id }) => {
+    const paymentUrl = `${API_BASE}/api/payment:get?filter=%7B%22document_id%22%3A%22${document_id}%22%7D`;
     const paymentData = await makeRequest<PaymentResponse>(
       paymentUrl,
       "GET"
     );
 
-    if (!document_id || !phone) {
+    if (!document_id ) {
       return {
         content: [
           {
             type: "text",
-            text: "Precisamos do CPF ou CNPJ e o telefone para gerar o código do PIX.",
+            text: "Precisamos do CPF para gerar o código do PIX.",
           },
         ],
       };
@@ -118,6 +126,89 @@ server.tool(
         {
           type: "text",
           text: paymentText,
+        },
+      ],
+    };
+  }
+);
+
+server.tool(
+  "buscar-ticket",
+  "Solicitar informações de um ticket. Informações que o usuário deve enviar: Protocolo",
+  {
+    protocol: z.string().trim(),
+  },
+  async ({ protocol }) => {
+    const ticketUrl = `${API_BASE}/api/ticket:get?filter=%7B%22protocol%22%3A%20%22${protocol}%22%7D`;
+    const ticketData = await makeRequest<TicketResponse>(
+      ticketUrl,
+      "GET"
+    );
+
+    if (!ticketData) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Não foi encontrado ticket para o protocolo informado!",
+          },
+        ],
+      };
+    }
+
+    const ticketText = `Os dados do ticket são: - Titulo: ${ticketData.data?.title} - Descrição: ${ticketData.data?.description} - Status: ${ticketData.data?.status} - Prioridade: ${ticketData.data?.priority}.`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: ticketText,
+        },
+      ],
+    };
+  }
+);
+
+server.tool(
+  "abrir-ticket",
+  "Abrir um novo ticket. Informações que o usuário deve enviar: Título, Descrição",
+  {
+    title: z.string().trim(),
+    description: z.string().trim(),
+  },
+  async ({ title, description }) => {
+    const body = {
+      title: title,
+      description: description,
+      status: "Aberto",
+      priority: "Normal",
+    };
+
+    const ticketUrl = `${API_BASE}/api/ticket:create`;
+    const ticketData = await makeRequest<TicketProtocolResponse>(
+      ticketUrl,
+      "POST",
+      body
+    );
+
+    if (!ticketData) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "Failed to open the ticket",
+          },
+        ],
+      };
+    }
+
+    const responseText = `O ticket foi aberto com sucesso. Segue o numero do protocolo:  ${ticketData.data?.protocol}`;
+
+    return {
+      content: [
+        {
+          type: "text",
+          text: responseText,
         },
       ],
     };
