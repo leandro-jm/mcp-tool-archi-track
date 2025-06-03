@@ -91,7 +91,8 @@ server.tool(
     document_id: z.string().trim()
   },
   async ({ document_id }) => {
-    const paymentUrl = `${API_BASE}/api/payment:get?filter=%7B%22document_id%22%3A%22${document_id}%22%7D`;
+    const documentNumbers = document_id.replace(/\D/g, '');
+    const paymentUrl = `${API_BASE}/api/payment:get?filter=%7B%22document_id%22%3A%22${documentNumbers}%22%7D`;
     const paymentData = await makeRequest<PaymentResponse>(
       paymentUrl,
       "GET"
